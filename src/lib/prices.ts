@@ -10,20 +10,29 @@ export async function searchMutualFunds(query: string): Promise<FundSearchResult
   return data.slice(0, 20).map((d) => ({ code: String(d.schemeCode), name: d.schemeName }));
 }
 
+type YahooQuote = {
+  quoteType?: string;
+  symbol?: string;
+  longname?: string;
+  shortname?: string;
+  exchDisp?: string;
+  exchange?: string;
+};
+
 export async function searchStocks(query: string): Promise<StockSearchResult[]> {
   const res = await fetch(
     `https://query2.finance.yahoo.com/v1/finance/search?q=${encodeURIComponent(query)}&quotesCount=15`,
     { headers: YAHOO_HEADERS }
   );
   if (!res.ok) return [];
-  const data = await res.json();
-  const quotes: any[] = data.quotes ?? [];
+  const data: { quotes?: YahooQuote[] } = await res.json();
+  const quotes = data.quotes ?? [];
   return quotes
-    .filter((q) => q.quoteType === "EQUITY" && q.symbol)
+    .filter((q): q is YahooQuote & { symbol: string } => q.quoteType === "EQUITY" && !!q.symbol)
     .map((q) => ({
-      code: q.symbol as string,
-      name: (q.longname ?? q.shortname ?? q.symbol) as string,
-      exchange: (q.exchDisp ?? q.exchange ?? "") as string,
+      code: q.symbol,
+      name: q.longname ?? q.shortname ?? q.symbol,
+      exchange: q.exchDisp ?? q.exchange ?? "",
     }));
 }
 

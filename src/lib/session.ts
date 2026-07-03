@@ -11,7 +11,7 @@ function getSecret(): string {
 function toBase64Url(bytes: ArrayBuffer | Uint8Array): string {
   const arr = new Uint8Array(bytes);
   let str = "";
-  for (const b of arr) str += String.fromCharCode(b);
+  for (let i = 0; i < arr.length; i++) str += String.fromCharCode(arr[i]);
   return btoa(str).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
