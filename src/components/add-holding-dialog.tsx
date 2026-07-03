@@ -104,7 +104,7 @@ export function AddHoldingDialog({
         </DialogHeader>
         <Command shouldFilter={false} className="rounded-lg">
           <CommandInput
-            placeholder={type === "MF" ? "Search scheme name…" : "Search company name or symbol…"}
+            placeholder={type === "MF" ? "Search scheme name or code…" : "Search company name or symbol…"}
             value={query}
             onValueChange={setQuery}
           />

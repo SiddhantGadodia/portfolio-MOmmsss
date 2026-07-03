@@ -9,10 +9,27 @@ export type FundSearchResult = { code: string; name: string };
 export type StockSearchResult = { code: string; name: string; exchange: string };
 
 export async function searchMutualFunds(query: string): Promise<FundSearchResult[]> {
-  const res = await fetchWithTimeout(`https://api.mfapi.in/mf/search?q=${encodeURIComponent(query)}`);
+  const trimmed = query.trim();
+
+  if (/^\d+$/.test(trimmed)) {
+    const byCode = await getMfSchemeByCode(trimmed);
+    return byCode ? [byCode] : [];
+  }
+
+  const res = await fetchWithTimeout(`https://api.mfapi.in/mf/search?q=${encodeURIComponent(trimmed)}`);
   if (!res.ok) return [];
   const data: { schemeCode: number; schemeName: string }[] = await res.json();
   return data.slice(0, 20).map((d) => ({ code: String(d.schemeCode), name: d.schemeName }));
+}
+
+export async function getMfSchemeByCode(schemeCode: string): Promise<FundSearchResult | null> {
+  const res = await fetchWithTimeout(`https://api.mfapi.in/mf/${encodeURIComponent(schemeCode)}`);
+  if (!res.ok) return null;
+  const data = await res.json();
+  const name = data?.meta?.scheme_name;
+  const code = data?.meta?.scheme_code;
+  if (!name || !code) return null;
+  return { code: String(code), name };
 }
 
 type YahooQuote = {
