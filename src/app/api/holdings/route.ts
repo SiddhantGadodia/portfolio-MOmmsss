@@ -6,6 +6,8 @@ import { xirr } from "@/lib/xirr";
 type HoldingRow = { id: number; type: "MF" | "STOCK"; name: string; code: string; created_at: string };
 type InvestmentRow = { id: number; holding_id: number; date: string; units: number; price: number };
 
+export const maxDuration = 30;
+
 export async function GET() {
   const pool = await getPool();
   const { rows: holdings } = await pool.query<HoldingRow>("SELECT * FROM holdings ORDER BY created_at DESC");

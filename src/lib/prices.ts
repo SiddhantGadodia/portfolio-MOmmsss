@@ -1,10 +1,15 @@
 const YAHOO_HEADERS = { "User-Agent": "Mozilla/5.0" };
+const FETCH_TIMEOUT_MS = 20000;
+
+function fetchWithTimeout(url: string, init?: RequestInit) {
+  return fetch(url, { ...init, signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
+}
 
 export type FundSearchResult = { code: string; name: string };
 export type StockSearchResult = { code: string; name: string; exchange: string };
 
 export async function searchMutualFunds(query: string): Promise<FundSearchResult[]> {
-  const res = await fetch(`https://api.mfapi.in/mf/search?q=${encodeURIComponent(query)}`);
+  const res = await fetchWithTimeout(`https://api.mfapi.in/mf/search?q=${encodeURIComponent(query)}`);
   if (!res.ok) return [];
   const data: { schemeCode: number; schemeName: string }[] = await res.json();
   return data.slice(0, 20).map((d) => ({ code: String(d.schemeCode), name: d.schemeName }));
@@ -20,7 +25,7 @@ type YahooQuote = {
 };
 
 export async function searchStocks(query: string): Promise<StockSearchResult[]> {
-  const res = await fetch(
+  const res = await fetchWithTimeout(
     `https://query2.finance.yahoo.com/v1/finance/search?q=${encodeURIComponent(query)}&quotesCount=15`,
     { headers: YAHOO_HEADERS }
   );
@@ -37,7 +42,7 @@ export async function searchStocks(query: string): Promise<StockSearchResult[]> 
 }
 
 export async function getMfCurrentPrice(schemeCode: string): Promise<{ price: number; date: string } | null> {
-  const res = await fetch(`https://api.mfapi.in/mf/${encodeURIComponent(schemeCode)}`);
+  const res = await fetchWithTimeout(`https://api.mfapi.in/mf/${encodeURIComponent(schemeCode)}`);
   if (!res.ok) return null;
   const data = await res.json();
   const latest = data?.data?.[0];
@@ -46,7 +51,7 @@ export async function getMfCurrentPrice(schemeCode: string): Promise<{ price: nu
 }
 
 export async function getStockCurrentPrice(symbol: string): Promise<{ price: number; date: string } | null> {
-  const res = await fetch(
+  const res = await fetchWithTimeout(
     `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=1d`,
     { headers: YAHOO_HEADERS }
   );
